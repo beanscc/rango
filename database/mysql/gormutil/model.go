@@ -5,16 +5,22 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/sirupsen/logrus"
 )
 
-var stdModel *model
-
+// model model struct
 type model struct {
 	// master for write
 	master *gorm.DB
 	// slave for read
 	slave *gorm.DB
+	// logger
+	logger logger
+	// ctxLoggerKey logger 对象保存在 ctx 中的 key
+	ctxLoggerKey interface{}
+	// debug
+	debug bool
+	// unscoped (建议true，防止表结构中有 deleted_at 字段时，gorm 加该查询条件，不容易发现) return all record including deleted record, refer Soft Delete https://jinzhu.github.io/gorm/crud.html#soft-delete
+	unscoped bool
 }
 
 // DBConfig db 配置 参数
@@ -40,96 +46,121 @@ var DefaultConnConfig = &ConnConfig{
 }
 
 // NewModel return
-func NewModel(master, slave *DBConfig) (*model, error) {
-	return newModel(master, slave)
-}
-
-// newModel return new model with DBConfig
-func newModel(master, slave *DBConfig) (*model, error) {
-	masterConn, err := newDB(master)
+func NewModel(master, slave *DBConfig, log logger, debug, unscoped bool) (*model, error) {
+	masterConn, err := newGormDB(master, debug, unscoped)
 	if err != nil {
 		return nil, err
 	}
+	masterConn.SetLogger(log)
 
-	slaveConn, err := newDB(slave)
+	slaveConn, err := newGormDB(slave, debug, unscoped)
 	if err != nil {
 		return nil, err
 	}
+	slaveConn.SetLogger(log)
 
-	return &model{master: masterConn, slave: slaveConn}, nil
+	return &model{
+		master:   masterConn,
+		slave:    slaveConn,
+		logger:   log,
+		debug:    debug,
+		unscoped: unscoped,
+	}, nil
 }
 
-// newDB return new gorm DB
-func newDB(cfg *DBConfig) (*gorm.DB, error) {
+// newGormDB return new gorm DB
+func newGormDB(cfg *DBConfig, debug, unscoped bool) (*gorm.DB, error) {
 	conn, err := gorm.Open("mysql", cfg.DSN)
 	if err != nil {
 		return nil, err
 	}
 
-	if cfg.Conn != nil {
-		// set conn attr
-		conn.DB().SetMaxIdleConns(cfg.Conn.MaxIdle)
-		conn.DB().SetMaxOpenConns(cfg.Conn.MaxOpen)
-		conn.DB().SetConnMaxLifetime(cfg.Conn.MaxLifeTime)
+	var connCfg *ConnConfig
+	if cfg.Conn == nil {
+		connCfg = DefaultConnConfig
+	} else {
+		connCfg = cfg.Conn
 	}
 
-	// unScoped && set logger
-	conn = clone(conn)
+	// set conn attr
+	conn.DB().SetMaxIdleConns(connCfg.MaxIdle)
+	conn.DB().SetMaxOpenConns(connCfg.MaxOpen)
+	conn.DB().SetConnMaxLifetime(connCfg.MaxLifeTime)
+
+	if debug {
+		conn = conn.Debug()
+	}
+
+	if unscoped {
+		conn = conn.Unscoped()
+	}
 
 	return conn, nil
 }
 
-// Master return model.master
-func (m *model) Master() *gorm.DB {
-	return m.master
+// SetLoggerCtxKey 设置上下文中存储 loogger 对象的 key
+// note: 若后面要使用 MasterLoggerFormContext/SlaveLoggerFromContext 方法，则需在前面调用此方法设置 logger 对象在上下文中存储的 key
+func (m *model) SetLoggerCtxKey(key interface{}) {
+	if key == nil {
+		panic("logger key in context can not be nil")
+	}
+
+	m.ctxLoggerKey = key
 }
 
-// Slave return model.Slave
+// Master return model.master without search conditions
+func (m *model) Master() *gorm.DB {
+	return m.clone().master
+}
+
+// Slave return model.Slave without search conditions
 func (m *model) Slave() *gorm.DB {
-	return m.slave
+	return m.clone().slave
 }
 
 // MasterWithContext return new model.master with log
-func (m *model) MasterWithLogger(log *logrus.Entry) *gorm.DB {
+func (m *model) MasterWithLogger(log logger) *gorm.DB {
 	nm := m.clone()
-	nm.master.Debug().SetLogger(Logger{log})
+	nm.master.SetLogger(log)
 
 	return m.master
 }
 
-// MasterWithContext return new model.master with ctx logger
-func (m *model) MasterWithContext(ctx context.Context) *gorm.DB {
-	logEntry := FromContext(ctx)
+// MasterLoggerFromContext return new model.master with ctx logger
+func (m *model) MasterLoggerFromContext(ctx context.Context) *gorm.DB {
+	logEntry := LoggerFromContext(ctx, m.ctxLoggerKey, m.logger)
 	return m.MasterWithLogger(logEntry)
 }
 
 // SlaveWithLogger return new gorm.DB with log
-func (m *model) SlaveWithLogger(log *logrus.Entry) *gorm.DB {
+func (m *model) SlaveWithLogger(log logger) *gorm.DB {
 	nm := m.clone()
-	nm.slave.Debug().SetLogger(Logger{log})
+	nm.slave.SetLogger(log)
 
 	return nm.slave
 }
 
-// SlaveWithContext return new model.slave with ctx logger
-func (m *model) SlaveWithContext(ctx context.Context) *gorm.DB {
-	logEntry := FromContext(ctx)
+// SlaveLoggerFromContext return new model.slave with ctx logger
+func (m *model) SlaveLoggerFromContext(ctx context.Context) *gorm.DB {
+	logEntry := LoggerFromContext(ctx, m.ctxLoggerKey, m.logger)
 	return m.SlaveWithLogger(logEntry)
 }
 
-// clone return a new model with it's copy db
+// clone return a new model with it's new db connection without search conditions
 func (m *model) clone() *model {
 	nm := new(model)
-	nm.master = clone(m.master)
-	nm.slave = clone(m.slave)
+	// clone 其他参数
+	*nm = *m
+	// clean search conditions
+	nm.master = m.master.New()
+	if nm.unscoped {
+		nm.master = nm.master.Unscoped()
+	}
+
+	nm.slave = m.slave.New()
+	if nm.unscoped {
+		nm.slave = nm.slave.Unscoped()
+	}
 
 	return nm
-}
-
-// clone return a new db connection without search conditions
-func clone(db *gorm.DB) *gorm.DB {
-	newDB := db.New().Unscoped()
-	newDB.SetLogger(Logger{Writer: NewLogrusEntry()})
-
-	return newDB
 }
