@@ -15,16 +15,17 @@ type Logger struct {
 func (logger Logger) Print(values ...interface{}) {
 	fields := LogFormatter(values...)
 	logEntry := logger.Writer.WithFields(fields)
-	if fields["gorm-level"].(string) == LogLevelSQL {
+	if fields[LogFieldLevel].(string) == LogLevelSQL {
 		logEntry.Info("")
 	} else {
 		logEntry.Error("gorm err. See the gorm-msg field for details.")
 	}
 }
 
-// logger 在上下文中存储的key
+// LoggerCtxKey logger 在上下文中存储的key
 type LoggerCtxKey string
 
+// logrus 在上下文中的key
 const (
 	LogrusCtxKey = LoggerCtxKey("logrus")
 )

@@ -45,7 +45,7 @@ var DefaultConnConfig = &ConnConfig{
 	MaxLifeTime: 10 * time.Minute,
 }
 
-// NewModel return
+// NewModel return new model
 func NewModel(master, slave *DBConfig, log logger, debug, unscoped bool) (*model, error) {
 	masterConn, err := newGormDB(master, debug, unscoped)
 	if err != nil {

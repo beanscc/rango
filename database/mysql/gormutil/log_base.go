@@ -17,9 +17,21 @@ var (
 	numericPlaceHolderRegexp = regexp.MustCompile(`\$\d+`)
 )
 
+// gorm 日志级别
 const (
 	LogLevelSQL = "sql"
 	LogLevelErr = "error"
+)
+
+// gorm 查询日志字段key定义
+const (
+	LogFieldLevel   = "gorm-level"
+	LogFieldTime    = "gorm-time"
+	LogFieldFile    = "gorm-file"
+	LogFieldLatency = "gorm-latency"
+	LogFieldSQL     = "gorm-sql"
+	LogFieldRows    = "gorm-rows"
+	LogFieldMsg     = "gorm-msg"
 )
 
 // NowFunc returns current time, this function is exported in order to be able
@@ -53,14 +65,15 @@ var LogFormatter = func(values ...interface{}) (fields map[string]interface{}) {
 		)
 
 		fields = map[string]interface{}{
-			"gorm-level": level,
-			"gorm-time":  currentTime,
-			"gorm-file":  source,
+			LogFieldLevel: level,
+			LogFieldTime:  currentTime,
+			LogFieldFile:  source,
 		}
 
 		if level == LogLevelSQL {
 			// duration
-			fields["gorm-latency"] = fmt.Sprintf("%.2fms", float64(values[2].(time.Duration).Nanoseconds()/1e4)/100.0)
+			fields[LogFieldLatency] = fmt.Sprintf("%.2fms", float64(values[2].(time.Duration).Nanoseconds()/1e4)/100.0)
+
 			// sql
 			for _, value := range values[4].([]interface{}) {
 				indirectValue := reflect.Indirect(reflect.ValueOf(value))
@@ -110,10 +123,10 @@ var LogFormatter = func(values ...interface{}) (fields map[string]interface{}) {
 			// 影响行数
 			affectedRows := fmt.Sprintf("%v rows affected or returned", values[5])
 
-			fields["gorm-sql"] = sql
-			fields["gorm-rows"] = affectedRows
+			fields[LogFieldSQL] = sql
+			fields[LogFieldRows] = affectedRows
 		} else {
-			fields["gorm-msg"] = values[2:]
+			fields[LogFieldMsg] = values[2:]
 		}
 	}
 
