@@ -14,7 +14,7 @@ type Logger struct {
 // Print format & print log
 func (logger Logger) Print(values ...interface{}) {
 	fields := LogFormatter(values...)
-	logEntry := logger.Writer.WithFields(fields)
+	logEntry := logger.Writer.WithFields(logrus.Fields(fields))
 	if fields[LogFieldLevel].(string) == LogLevelSQL {
 		logEntry.Info("")
 	} else {
@@ -31,7 +31,7 @@ const (
 )
 
 // NewLogrusEntry new logrus.Entry with json formatter
-func NewLogrusEntry() *logrus.Entry {
+func NewLogrusEntry() *Logger {
 	log := logrus.New()
 	log.Formatter = &logrus.JSONFormatter{
 		TimestampFormat: time.RFC3339Nano,
@@ -39,5 +39,5 @@ func NewLogrusEntry() *logrus.Entry {
 
 	logEntry := logrus.NewEntry(log)
 
-	return logEntry
+	return &Logger{Writer: logEntry}
 }
