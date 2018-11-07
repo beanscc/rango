@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/beanscc/rango/database/mysql/gormutil"
 	"github.com/beanscc/rango/database/mysql/gormutil/examples"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
