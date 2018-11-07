@@ -134,7 +134,12 @@ func (g *gormDB) WithContext(ctx context.Context) *gormDB {
 	return ng
 }
 
-// withLogger set gorm.DB with new logger
+// setLogger set gormDB log
+func (g *gormDB) setLogger(log logger) {
+	g.log = log
+}
+
+// withLogger set gorm.DB with new logger, without change gormDB's log
 func (g *gormDB) withLogger(log logger) *gorm.DB {
 	db := g.DB()
 	db.SetLogger(log)
