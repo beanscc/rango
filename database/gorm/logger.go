@@ -1,15 +1,13 @@
-package gormutil
+package gorm
 
 import (
-	"context"
 	"database/sql/driver"
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 	"time"
 	"unicode"
-
-	"github.com/beanscc/utils/stringutil"
 )
 
 var (
@@ -20,7 +18,6 @@ var (
 // gorm 日志级别
 const (
 	LogLevelSQL = "sql"
-	LogLevelErr = "error"
 )
 
 // gorm 查询日志字段key定义
@@ -80,7 +77,11 @@ var LogFormatter = func(values ...interface{}) (fields map[string]interface{}) {
 				if indirectValue.IsValid() {
 					value = indirectValue.Interface()
 					if t, ok := value.(time.Time); ok {
-						formattedValues = append(formattedValues, fmt.Sprintf("'%v'", t.Format("2006-01-02 15:04:05")))
+						if t.IsZero() {
+							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", "0000-00-00 00:00:00"))
+						} else {
+							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", t.Format("2006-01-02 15:04:05")))
+						}
 					} else if b, ok := value.([]byte); ok {
 						if str := string(b); isPrintable(str) {
 							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", str))
@@ -94,7 +95,12 @@ var LogFormatter = func(values ...interface{}) (fields map[string]interface{}) {
 							formattedValues = append(formattedValues, "NULL")
 						}
 					} else {
-						formattedValues = append(formattedValues, fmt.Sprintf("'%v'", value))
+						switch value.(type) {
+						case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool:
+							formattedValues = append(formattedValues, fmt.Sprintf("%v", value))
+						default:
+							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", value))
+						}
 					}
 				} else {
 					formattedValues = append(formattedValues, "NULL")
@@ -119,7 +125,7 @@ var LogFormatter = func(values ...interface{}) (fields map[string]interface{}) {
 			}
 
 			// 将sql中的空白统一替换成一个空格
-			sql = stringutil.SimplifyWhitespace(sql)
+			sql = strings.Join(strings.Fields(strings.TrimSpace(sql)), " ")
 			// 影响行数
 			affectedRows := fmt.Sprintf("%v rows affected or returned", values[5])
 
@@ -133,26 +139,38 @@ var LogFormatter = func(values ...interface{}) (fields map[string]interface{}) {
 	return
 }
 
-// logger gorm log interface
+/*
+// gorm logger interface
 type logger interface {
 	Print(v ...interface{})
 }
+*/
 
-// LoggerFromContext 从 ctx 按指定 key 取出 log 对象，若为该对象实现了 logger 接口，则直接返回，否则，使用指定的默认 logger 接口实现对象
-func LoggerFromContext(ctx context.Context, loggerKey interface{}, defaultLogger logger) logger {
-	log := ctx.Value(loggerKey)
-	if log == nil {
-		return defaultLogger
-	}
-
-	if log, ok := log.(logger); ok {
-		return log
-	}
-
-	return defaultLogger
+// LogWriter
+type LogWriter interface {
+	Infof(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
 }
 
-// LoggerToContext 将实现 logger 接口的对象存入 ctx
-func LoggerToContext(ctx context.Context, loggerKey interface{}, log logger) context.Context {
-	return context.WithValue(ctx, loggerKey, log)
+type Logger struct {
+	LogWriter
+}
+
+func NewLogger(w LogWriter) *Logger {
+	return &Logger{LogWriter: w}
+}
+
+func (l Logger) Print(values ...interface{}) {
+	fields := LogFormatter(values...)
+	if fields[LogFieldLevel].(string) == LogLevelSQL {
+		l.Infof("[%s]:%v; [%s]:%v; [%s]:%v; [%s]:%v; [%s]:%v",
+			LogFieldTime, fields[LogFieldTime],
+			LogFieldFile, fields[LogFieldFile],
+			LogFieldLatency, fields[LogFieldLatency],
+			LogFieldSQL, fields[LogFieldSQL],
+			LogFieldRows, fields[LogFieldRows],
+		)
+	} else {
+		l.Errorf("gorm err:%", fields[LogFieldMsg])
+	}
 }
