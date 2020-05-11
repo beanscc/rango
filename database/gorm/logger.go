@@ -171,6 +171,6 @@ func (l Logger) Print(values ...interface{}) {
 			LogFieldRows, fields[LogFieldRows],
 		)
 	} else {
-		l.Errorf("gorm err:%", fields[LogFieldMsg])
+		l.Errorf("gorm err:%v", fields[LogFieldMsg])
 	}
 }
