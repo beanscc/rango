@@ -85,6 +85,26 @@ func Logger() *zap.SugaredLogger {
 	return logger
 }
 
+// // WithContext return a logger with context info
+// func WithContext(ctx context.Context) *zap.SugaredLogger {
+// 	return withCtxFn(ctx, Logger())
+// }
+//
+// type WithContextFunc func(ctx context.Context, l *zap.SugaredLogger) *zap.SugaredLogger
+//
+// var withCtxFn WithContextFunc
+//
+// func SetWithContextFunc(fn WithContextFunc) {
+// 	withCtxFn = fn
+// }
+
+const loggerCtxKey = "Ctx-Key-Logger"
+
+// ContextKey return
+func ContextKey() string {
+	return loggerCtxKey
+}
+
 // NewContext return new context with a *zap.SugaredLogger inside
 // 若将 log 保存在 gin.Context 中：
 //      // c = *gin.Context
@@ -105,15 +125,6 @@ func FromContext(ctx context.Context) *zap.SugaredLogger {
 	}
 
 	return Logger()
-}
-
-type ctxKey string
-
-const loggerCtxKey ctxKey = "Ctx-Key-Logger"
-
-// ContextKey return
-func ContextKey() ctxKey {
-	return loggerCtxKey
 }
 
 // NewFileWriteSyncer 文件输出器
