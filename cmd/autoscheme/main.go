@@ -7,20 +7,68 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
-	connDSN    = flag.String("dsn", "", "mysql connect dsn; eg: user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local")
-	outputPath = flag.String("output", "scheme", "output path, the last base path is the package name; eg: ${project path}/repo/scheme")
+	connDSN      = flag.String("dsn", "", "mysql connect dsn; eg: user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local")
+	outputPath   = flag.String("output", "scheme", "output path, the last base path is the package name; eg: ${project path}/repo/scheme")
+	wantTables   = flag.String("tables", "", "tables that you want to generate, separate multiple table names with commas; eg: table1,table2")
+	prefixTables = flag.String("prefix", "", "若指定该选项，则只处理表名中含有此前缀的表结构")
+	suffixTables = flag.String("suffix", "", "若指定该选项，则只处理表名中含有此后缀的表结构")
 )
 
 func Usage() {
-	fmt.Fprintf(os.Stderr, "Usage of autoschme:\n")
-	fmt.Fprintf(os.Stderr, "\t autochme -dsn $db_dsn -output $your/path/packagename\n")
+	fmt.Fprintf(os.Stderr, `用于自动生成 mysql 表结构对应 go struct 的小工具
+
+Usage:
+  autoscheme -dsn $dsn [other options]
+available options:
+`)
 	flag.PrintDefaults()
+}
+
+func getValidTables() ([]string, error) {
+	var (
+		err    error
+		tables []string
+	)
+
+	if *wantTables != "" {
+		tables = strings.Split(*wantTables, ",")
+	} else {
+		tables, err = getTables()
+		if err != nil {
+			return nil, fmt.Errorf("get tables failed. err: %v", err)
+		}
+	}
+
+	if *prefixTables != "" {
+		hasPrefixTables := make([]string, 0, len(tables))
+		for _, v := range tables {
+			if strings.HasPrefix(v, *prefixTables) {
+				hasPrefixTables = append(hasPrefixTables, v)
+			}
+		}
+
+		tables = hasPrefixTables
+	}
+
+	if *suffixTables != "" {
+		hasSuffixTables := make([]string, 0, len(tables))
+		for _, v := range tables {
+			if strings.HasSuffix(v, *suffixTables) {
+				hasSuffixTables = append(hasSuffixTables, v)
+			}
+		}
+
+		tables = hasSuffixTables
+	}
+
+	return tables, nil
 }
 
 func main() {
@@ -35,6 +83,7 @@ func main() {
 	start := time.Now()
 	log.Println("start to connect to database ...")
 
+	var err error
 	// 连接 mysql
 	if err := initDB(*connDSN); err != nil {
 		panic(err)
@@ -42,9 +91,14 @@ func main() {
 	connTime := time.Now().Sub(start)
 	log.Printf("connect to database takes: %s", connTime)
 
-	tables, err := getTables()
+	tables, err := getValidTables()
 	if err != nil {
-		log.Fatalf("get tables failed. err: %v", err)
+		log.Fatalf("get valid tables failed. err: %v", err)
+	}
+
+	if len(tables) == 0 {
+		log.Printf("no tables to build scheme")
+		os.Exit(0)
 	}
 
 	dir, err := filepath.Abs(*outputPath)
