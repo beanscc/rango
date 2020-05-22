@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
-	dsn := `root:P4m@bpet@tcp(127.0.0.1:3306)/crawler?charset=utf8mb4&parseTime=True&loc=Local`
+	dsn := `root:P4m@bpet@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local`
 	if err := initDB(dsn); err != nil {
 		panic(err)
 	}
@@ -42,11 +41,11 @@ func Test_getTableFullColumns(t *testing.T) {
 	}
 }
 
-func Test_buildTableStructBuffer(t *testing.T) {
-	got, err := buildTableStructBuffer("model", "crawler_aliexpress_category")
+func Test_buildTableStruct(t *testing.T) {
+	got, err := buildTableStruct("model", "user")
 	if err != nil {
-		t.Errorf("Test_buildTableStructBuffer failed. err:%v", err)
+		t.Errorf("Test_buildTableStruct failed. err:%v", err)
 		return
 	}
-	fmt.Println(got)
+	t.Logf("Test_buildTableStruct got:\n%s", got)
 }
