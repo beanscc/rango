@@ -10,10 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beanscc/rango/utils"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
+	version      = flag.Bool("v", false, "version prints the build information")
+	help         = flag.Bool("h", false, "help prints the usage")
 	connDSN      = flag.String("dsn", "", "mysql connect dsn; eg: user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local")
 	outputPath   = flag.String("output", "scheme", "output path, the last base path is the package name; eg: ${project path}/repo/scheme")
 	wantTables   = flag.String("tables", "", "tables that you want to generate, separate multiple table names with commas; eg: table1,table2")
@@ -31,49 +34,22 @@ available options:
 	flag.PrintDefaults()
 }
 
-func getValidTables() ([]string, error) {
-	var (
-		err    error
-		tables []string
-	)
-
-	if *wantTables != "" {
-		tables = strings.Split(*wantTables, ",")
-	} else {
-		tables, err = getTables()
-		if err != nil {
-			return nil, fmt.Errorf("get tables failed. err: %v", err)
-		}
+func handleFlag() {
+	flag.Usage = Usage
+	flag.Parse()
+	if *version {
+		fmt.Println(utils.Version())
+		os.Exit(0)
 	}
 
-	if *prefixTables != "" {
-		hasPrefixTables := make([]string, 0, len(tables))
-		for _, v := range tables {
-			if strings.HasPrefix(v, *prefixTables) {
-				hasPrefixTables = append(hasPrefixTables, v)
-			}
-		}
-
-		tables = hasPrefixTables
+	if *help {
+		flag.Usage()
+		os.Exit(0)
 	}
-
-	if *suffixTables != "" {
-		hasSuffixTables := make([]string, 0, len(tables))
-		for _, v := range tables {
-			if strings.HasSuffix(v, *suffixTables) {
-				hasSuffixTables = append(hasSuffixTables, v)
-			}
-		}
-
-		tables = hasSuffixTables
-	}
-
-	return tables, nil
 }
 
 func main() {
-	flag.Usage = Usage
-	flag.Parse()
+	handleFlag()
 
 	if *connDSN == "" {
 		flag.Usage()
@@ -138,4 +114,44 @@ func main() {
 
 	end := time.Now()
 	log.Printf("total takes %s, conn takes: %s", end.Sub(start), connTime)
+}
+
+func getValidTables() ([]string, error) {
+	var (
+		err    error
+		tables []string
+	)
+
+	if *wantTables != "" {
+		tables = strings.Split(*wantTables, ",")
+	} else {
+		tables, err = getTables()
+		if err != nil {
+			return nil, fmt.Errorf("get tables failed. err: %v", err)
+		}
+	}
+
+	if *prefixTables != "" {
+		hasPrefixTables := make([]string, 0, len(tables))
+		for _, v := range tables {
+			if strings.HasPrefix(v, *prefixTables) {
+				hasPrefixTables = append(hasPrefixTables, v)
+			}
+		}
+
+		tables = hasPrefixTables
+	}
+
+	if *suffixTables != "" {
+		hasSuffixTables := make([]string, 0, len(tables))
+		for _, v := range tables {
+			if strings.HasSuffix(v, *suffixTables) {
+				hasSuffixTables = append(hasSuffixTables, v)
+			}
+		}
+
+		tables = hasSuffixTables
+	}
+
+	return tables, nil
 }
