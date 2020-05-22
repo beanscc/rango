@@ -29,6 +29,7 @@ func Usage() {
 
 Usage:
   autoscheme -dsn $dsn [other options]
+
 available options:
 `)
 	flag.PrintDefaults()
