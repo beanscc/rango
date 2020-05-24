@@ -17,7 +17,7 @@ import (
 var (
 	version      = flag.Bool("v", false, "version prints the build information")
 	help         = flag.Bool("h", false, "help prints the usage")
-	connDSN      = flag.String("dsn", "", "mysql connect dsn; eg: user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local")
+	connDSN      = flag.String("dsn", "", `mysql connect dsn; eg: "user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local"`)
 	outputPath   = flag.String("output", "scheme", "output path, the last base path is the package name; eg: ${project path}/repo/scheme")
 	wantTables   = flag.String("tables", "", "tables that you want to generate, separate multiple table names with commas; eg: table1,table2")
 	prefixTables = flag.String("prefix", "", "若指定该选项，则只处理表名中含有此前缀的表结构")
@@ -28,7 +28,9 @@ func Usage() {
 	fmt.Fprintf(os.Stderr, `用于自动生成 mysql 表结构对应 go struct 的小工具
 
 Usage:
-  autoscheme -dsn $dsn [other options]
+  autoscheme -dsn "$dsn" [other options]
+
+  eg: ./autoscheme -dsn "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local" -output "test/scheme"
 
 available options:
 `)

@@ -1,4 +1,4 @@
-package gorm
+package gormutil
 
 import (
 	"database/sql/driver"
