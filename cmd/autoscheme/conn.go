@@ -4,14 +4,14 @@ import (
 	"time"
 
 	"github.com/beanscc/rango/database"
-	"github.com/beanscc/rango/database/gorm"
+	"github.com/beanscc/rango/database/gormutil"
 )
 
-var globalDBConn *gorm.Conn
+var globalDBConn *gormutil.Conn
 var globalDBName string
 
 func initDB(dsn string) error {
-	m := gorm.Config{
+	m := gormutil.Config{
 		Config: database.Config{
 			DriverType:  "mysql",
 			DSN:         dsn,
@@ -23,7 +23,7 @@ func initDB(dsn string) error {
 		Unscoped: true,
 	}
 
-	db, err := gorm.NewConn(&m, &m)
+	db, err := gormutil.NewConn(&m, &m)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func initDB(dsn string) error {
 	return err
 }
 
-func conn() *gorm.Conn {
+func conn() *gormutil.Conn {
 	return globalDBConn
 }
 
