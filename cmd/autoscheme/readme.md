@@ -1,10 +1,9 @@
 # autoscheme
 
-TODO：
-- 完善 mysql 数据类型和 golang 数据类型的关系映射
-- 完善缩写词大写
+用于自动生成 mysql 表结构对应 go struct 的小工具
 
+查看版本信息：
+./autoscheme -v
 
-
-- tables 指定要同步生成 scheme 的表名，多个表名之间用英文逗号分隔
-- prefix 指定要同步生成
+查看使用帮助：
+./autoscheme -h
