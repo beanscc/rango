@@ -4,33 +4,31 @@ import (
 	"strings"
 )
 
-// // mysql 支持以下数据类型：
-// // - 数值类型
-// //     - 整数型
-// //     - 浮点型
-// // - 日期和时间类型
-// // - 字符类型
-// // - 空间类型
-// // - json 数据类型
-// type MySQLDataType struct {
-// 	Name     string // 小写类型名: int/integer/mediumint/smallint/tinyint/char/varchar/text
-// 	Unsigned bool   // 是否无符号数值
-// 	ZeroFill bool   // 是否按0左填充
-// 	M        uint8  // 整型 width 位数/浮点型数值个数
-// 	D        uint8  // 浮点型 小数位数
-// }
-
 func getDataType(s string) string {
-	mysqlDataType := s
-	index := strings.Index(s, "(")
+	types := strings.Split(s, " ")
+	typeName := types[0]
+	index := strings.Index(typeName, "(")
 	if index != -1 {
-		mysqlDataType = s[:index]
+		typeName = s[:index]
 	}
-	dataType := mysqlDataType2Golang[strings.ToLower(mysqlDataType)]
+
+	dataType, ok := mysqlDataType2Golang[strings.ToLower(typeName)]
+	if !ok {
+		return "unknown"
+	}
+
+	// go 只有整数型有 unsigned 属性
+	switch dataType {
+	case "int8", "int16", "int32", "int", "int64":
+		// numeric unsigned/zerofill
+		if strings.Contains(s, "unsigned") {
+			dataType = "u" + dataType
+		}
+	}
+
 	return dataType
 }
 
-// TODO 完善类型
 // mysql 字段类型和golang类型对应
 var mysqlDataType2Golang = map[string]string{
 	// numeric
@@ -71,6 +69,6 @@ var mysqlDataType2Golang = map[string]string{
 	"mediumtext": "string",
 	"longblob":   "string",
 	"longtext":   "string",
-	// "enum" // TODO
-	// "set" // TODO
+	"enum":       "string",
+	"set":        "string",
 }
