@@ -23,7 +23,7 @@ func Test_IndexReflect(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IndexReflect(tt.args.xs, tt.args.x)
+			got := indexReflect(tt.args.xs, tt.args.x)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("IndexReflect() = %v, want=%v", got, tt.want)
 			}
@@ -119,14 +119,14 @@ func Test_IndexStrings(t *testing.T) {
 		want int
 	}{
 		{"t1", args{xs: []string{"1", "2", "3"}, x: "3.0", strict: true}, -1},
-		{"t2", args{xs: []string{"1", "Go", "go", "测试"}, x: "GO", strict: false}, 1},
+		{"t2", args{xs: []string{"1", "Go", "go", "测试"}, x: "Go", strict: false}, 1},
 		{"t3", args{xs: []string{"1", "Go", "go", "测试"}, x: "GO", strict: true}, -1},
 		{"t4", args{xs: []string{"1", "Go", "go", "测试"}, x: "go", strict: true}, 2},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IndexStrings(tt.args.xs, tt.args.x, tt.args.strict)
+			got := IndexStrings(tt.args.xs, tt.args.x)
 			if got != tt.want {
 				t.Errorf("IndexStrings() failed. got=%v, want=%v", got, tt.want)
 			}

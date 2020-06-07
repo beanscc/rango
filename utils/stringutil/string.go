@@ -11,7 +11,6 @@ import (
 // CharLength 返回字符个数
 func CharLength(s string) int {
 	return utf8.RuneCountInString(s)
-
 	// 或 使用 []rune (比 utf8.RuneCountInString(s) 慢)
 	// return len([]rune(s))
 }
@@ -39,21 +38,21 @@ func IsPalindrome(word string) bool {
 	return true
 }
 
-// IsPalindromeRune 判断一个单词是否回文单词
-// 思路：使用utf8关于rune的方法，递归处理
-func IsPalindromeRune(word string) bool {
-	if utf8.RuneCountInString(word) <= 1 {
-		return true
-	}
-
-	first, sizeOfFirst := utf8.DecodeRuneInString(word)
-	last, sizeofLast := utf8.DecodeLastRuneInString(word)
-	if first != last {
-		return false
-	}
-
-	return IsPalindromeRune(word[sizeOfFirst : len(word)-sizeofLast])
-}
+// // IsPalindromeRune 判断一个单词是否回文单词
+// // 思路：使用utf8关于rune的方法，递归处理
+// func IsPalindromeRune(word string) bool {
+// 	if utf8.RuneCountInString(word) <= 1 {
+// 		return true
+// 	}
+//
+// 	first, sizeOfFirst := utf8.DecodeRuneInString(word)
+// 	last, sizeofLast := utf8.DecodeLastRuneInString(word)
+// 	if first != last {
+// 		return false
+// 	}
+//
+// 	return IsPalindromeRune(word[sizeOfFirst : len(word)-sizeofLast])
+// }
 
 // PadLeft 使用指定字符 pad 从左侧填充补齐字符串 s 到 width 指定的字符长度
 // example: PadLeft("test", 7, '*')  = `***test`
@@ -115,31 +114,31 @@ func SimplifyWhitespaceWithReg(s string) string {
 	return strings.TrimSpace(regx.ReplaceAllLiteralString(s, " "))
 }
 
-// 下划线格式转小驼峰：under_score -> underScore
-func UnderScore2Camel(s string) string {
-	ss := strings.Split(s, "_")
-	if len(ss) < 2 {
-		return s
+const (
+	separatorSnake = '_'
+)
+
+// Snake2Camel 蛇形下划线格式转驼峰
+// 若 title == true，转成大驼峰，即："under_score" -> "UnderScore"; 否则 -> "underScore"
+func Snake2Camel(s string, title bool) string {
+	var prev rune
+	if title {
+		prev = separatorSnake
 	}
+	return strings.Map(
+		func(r rune) rune {
+			if prev == separatorSnake {
+				prev = r
+				return unicode.ToTitle(r)
+			}
 
-	su := ss[1:]
-	for i := range su {
-		su[i] = strings.Title(su[i])
-	}
+			if r == separatorSnake {
+				prev = r
+				return -1
+			}
 
-	return strings.Join(ss, "")
-}
-
-// 下划线格式转大驼峰 under_score -> UnderScore
-func UnderScore2Pascal(s string) string {
-	ss := strings.Split(s, "_")
-	if len(ss) < 2 {
-		return s
-	}
-
-	for i := range ss {
-		ss[i] = strings.Title(ss[i])
-	}
-
-	return strings.Join(ss, "")
+			prev = r
+			return r
+		},
+		s)
 }

@@ -1,10 +1,8 @@
-package numberutil_test
+package numberutil
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/beanscc/utils/numberutil"
 )
 
 func ExampleEqualFloat64() {
@@ -18,7 +16,7 @@ func ExampleEqualFloat64() {
 	}
 
 	for _, v := range data {
-		fmt.Printf("%-5t, %-5t, %-5t, ", v.x == v.y, numberutil.EqualFloat64(v.x, v.y, -1), numberutil.EqualFloat64(v.x, v.y, 0.000000000001))
+		fmt.Printf("%-5t, %-5t, %-5t, ", v.x == v.y, EqualFloat64(v.x, v.y, -1), EqualFloat64(v.x, v.y, 0.000000000001))
 		fmt.Println(v.x, v.y)
 	}
 
@@ -41,7 +39,7 @@ func TestEqualFloat64(t *testing.T) {
 	}
 
 	for _, v := range data {
-		fmt.Printf("%-5t %-5t %-5t ", v.x == v.y, numberutil.EqualFloat64(v.x, v.y, -1), numberutil.EqualFloat64(v.x, v.y, 0.01))
+		fmt.Printf("%-5t %-5t %-5t ", v.x == v.y, EqualFloat64(v.x, v.y, -1), EqualFloat64(v.x, v.y, 0.01))
 		fmt.Println(v.x, v.y)
 	}
 }
@@ -59,7 +57,7 @@ func TestEqualFloat64Prec(t *testing.T) {
 	}
 
 	for _, v := range data {
-		fmt.Printf("%-5t %-5t %-5t %-5t ", v.x == v.y, numberutil.EqualFloat64(v.x, v.y, -1), numberutil.EqualFloat64(v.x, v.y, 0.01), numberutil.EqualFloat64Prec(v.x, v.y, 6))
+		fmt.Printf("%-5t %-5t %-5t %-5t ", v.x == v.y, EqualFloat64(v.x, v.y, -1), EqualFloat64(v.x, v.y, 0.01), EqualFloat64Prec(v.x, v.y, 6))
 		fmt.Println(v.x, v.y)
 	}
 }
@@ -79,7 +77,7 @@ func TestRound(t *testing.T) {
 
 	for _, d := range testData {
 		t.Run(d.name, func(t *testing.T) {
-			r := numberutil.Round(d.input, 3)
+			r := Round(d.input, 3)
 			if r != d.want {
 				t.Errorf("t: %v, Round to %v failed. input=%v, want=%v, ret=%v", d.name, 3, d.input, d.want, r)
 			}

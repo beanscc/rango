@@ -5,6 +5,49 @@ import (
 	"testing"
 )
 
+func TestChunk(t *testing.T) {
+	type args struct {
+		xs   interface{}
+		size int
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want interface{}
+	}{
+		{"t1", args{xs: []uint{1, 2, 3, 4, 5}, size: 3}, [][]uint{{1, 2, 3}, {4, 5}}},
+		{"t2", args{xs: []string{"1", "2", "3", "4", "5"}, size: 3}, [][]string{{"1", "2", "3"}, {"4", "5"}}},
+		{"t3", args{
+			xs: [][]int{
+				{1, 2, 3},
+				{4},
+				{5, 6},
+				{7}},
+			size: 2}, [][][]int{
+			[][]int{
+				[]int{1, 2, 3},
+				[]int{4}},
+			[][]int{
+				[]int{5, 6},
+				[]int{7},
+			},
+		},
+		}, // 对二维切片，分块;结果是一个三维切片
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Chunk(tt.args.xs, tt.args.size)
+			t.Logf("Chunk() =%+v", got)
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TestChunk() failed. got=%#v, want=%#v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_chunkCap(t *testing.T) {
 	type args struct {
 		l    int
@@ -31,7 +74,7 @@ func Test_chunkCap(t *testing.T) {
 	}
 }
 
-func Test_ChunkReflect(t *testing.T) {
+func Test_chunkReflect(t *testing.T) {
 	type args struct {
 		xs    interface{}
 		etype string
@@ -67,8 +110,8 @@ func Test_ChunkReflect(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ChunkReflect(tt.args.xs, tt.args.size)
-			t.Logf("ChunkReflect() =%#v", got)
+			got := chunkReflect(tt.args.xs, tt.args.size)
+			t.Logf("chunkReflect() =%#v", got)
 
 			switch tt.args.etype {
 			case "int":
@@ -78,7 +121,7 @@ func Test_ChunkReflect(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ChunkReflect() failed. got=%#v, want=%#v", got, tt.want)
+				t.Errorf("Test_chunkReflect() failed. got=%#v, want=%#v", got, tt.want)
 			}
 		})
 	}

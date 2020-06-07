@@ -29,7 +29,7 @@ func Test_UniqueReflect(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := UniqueReflect(tt.args.value)
+			got := uniqueReflect(tt.args.value)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UniqueReflect() failed. got=%v, want=%v", got, tt.want)
 			}
@@ -40,77 +40,6 @@ func Test_UniqueReflect(t *testing.T) {
 type struct_A struct {
 	name string
 	age  int
-}
-
-type uniqueSlice_struct_A struct {
-	origin []struct_A
-	resp   []struct_A
-}
-
-func (s uniqueSlice_struct_A) Len() int {
-	return len(s.origin)
-}
-
-func (s uniqueSlice_struct_A) Index(i int) interface{} {
-	return s.origin[i]
-}
-
-func (s *uniqueSlice_struct_A) Push(i int) {
-	s.resp = append(s.resp, s.Index(i).(struct_A))
-}
-
-func (s uniqueSlice_struct_A) Resp() interface{} {
-	return s.resp
-}
-
-func Test_UniqueSlice(t *testing.T) {
-	type args struct {
-		origin interface{}
-		eType  string
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want interface{}
-	}{
-		{"t1", args{[]int{1, 2, 3, 1, 3, 4}, "int"}, []int{1, 2, 3, 4}},                                                                                                                         // []int
-		{"t2", args{[]string{"1", "2", "3", "1", "3", "4"}, "string"}, []string{"1", "2", "3", "4"}},                                                                                            // []string
-		{"t3", args{[]struct_A{{name: "test1"}, {name: "test1"}, {name: "test2"}, {name: "test1", age: 2}}, "struct_A"}, []struct_A{{name: "test1"}, {name: "test2"}, {name: "test1", age: 2}}}, // []struct
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var u Unique
-			switch tt.args.eType {
-			case "int":
-				u = &IntUniqueSlice{origin: tt.args.origin.([]int)}
-			case "string":
-				u = &StringUniqueSlice{origin: tt.args.origin.([]string)}
-			case "struct_A":
-				u = &uniqueSlice_struct_A{origin: tt.args.origin.([]struct_A)}
-			}
-
-			got := UniqueSlice(u)
-			t.Logf("UniqueSlice() = %+v", got)
-
-			switch tt.args.eType {
-			case "int":
-				got = got.([]int)
-				tt.want = tt.want.([]int)
-			case "string":
-				got = got.([]string)
-				tt.want = tt.want.([]string)
-			case "struct_A":
-				got = got.([]struct_A)
-				tt.want = tt.want.([]struct_A)
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UniqueSlice() failed. got=%+v, want=%+v", got, tt.want)
-			}
-		})
-	}
 }
 
 func Test_UniqueInts(t *testing.T) {
