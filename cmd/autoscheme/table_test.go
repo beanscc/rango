@@ -4,15 +4,23 @@ import (
 	"testing"
 )
 
-func TestMain(m *testing.M) {
+// func TestMain(m *testing.M) {
+// 	dsn := `root:P4m@bpet@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local`
+// 	if err := initDB(dsn); err != nil {
+// 		panic(err)
+// 	}
+// 	m.Run()
+// }
+
+func testInit() {
 	dsn := `root:P4m@bpet@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local`
 	if err := initDB(dsn); err != nil {
 		panic(err)
 	}
-	m.Run()
 }
 
 func Test_getTables(t *testing.T) {
+	testInit()
 	got, err := getTables()
 	if err != nil {
 		t.Errorf("Test_getTables failed. err:%v", err)
@@ -24,6 +32,7 @@ func Test_getTables(t *testing.T) {
 }
 
 func Test_getTableFullColumns(t *testing.T) {
+	testInit()
 	tables, err := getTables()
 	if err != nil {
 		t.Errorf("Test_getTableFullColumns failed. get tables err:%v", err)
@@ -42,6 +51,7 @@ func Test_getTableFullColumns(t *testing.T) {
 }
 
 func Test_buildTableStruct(t *testing.T) {
+	testInit()
 	got, err := buildTableStruct("model", "user")
 	if err != nil {
 		t.Errorf("Test_buildTableStruct failed. err:%v", err)
