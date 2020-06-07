@@ -65,7 +65,7 @@ func main() {
 	var err error
 	// 连接 mysql
 	if err := initDB(*connDSN); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	connTime := time.Now().Sub(start)
 	log.Printf("connect to database takes: %s", connTime)
@@ -76,8 +76,7 @@ func main() {
 	}
 
 	if len(tables) == 0 {
-		log.Printf("no tables to build scheme")
-		os.Exit(0)
+		log.Fatalf("no tables to build scheme")
 	}
 
 	dir, err := filepath.Abs(*outputPath)
@@ -87,8 +86,6 @@ func main() {
 	log.Printf("output dir: %v", dir)
 
 	pkgName := filepath.Base(dir)
-	log.Printf("output package: %v", pkgName)
-
 	// 检查目录
 	_, err = os.Stat(dir)
 	if err != nil {

@@ -1,0 +1,70 @@
+package pageutil
+
+// Page Page
+type Page struct {
+	Index          int // 查询页码
+	Size           int // 查询每页记录数
+	Count          int // 总记录数
+	defaultMinSize int // 默认查询每页最小记录数
+	defaultMaxSize int // 默认查询每页最大记录数
+}
+
+const (
+	defaultMinSize = 10
+	defaultMaxSize = 50
+)
+
+func New() *Page {
+	return &Page{
+		defaultMinSize: defaultMinSize,
+		defaultMaxSize: defaultMaxSize,
+	}
+}
+
+// SetDefaultMinPageSize 设置每页最小查询记录数
+func (p *Page) SetDefaultMinPageSize(v int) {
+	if v > 0 {
+		p.defaultMinSize = v
+	}
+}
+
+// SetDefaultMaxPageSize 设置每页最大查询记录数
+func (p *Page) SetDefaultMaxPageSize(v int) {
+	if v > 0 && v > p.defaultMinSize {
+		p.defaultMaxSize = v
+	}
+}
+
+// DefaultMinPageSize DefaultMinPageSize
+func (p *Page) DefaultMinPageSize() int {
+	return p.defaultMinSize
+}
+
+// DefaultMaxPageSize DefaultMaxPageSize
+func (p *Page) DefaultMaxPageSize() int {
+	return p.defaultMaxSize
+}
+
+// TotalPage 获取总页数
+func (p *Page) TotalPage() int {
+	t := p.Count / p.Size
+	if (p.Count % p.Size) > 0 {
+		t++
+	}
+
+	return t
+}
+
+func (p *Page) InitPageSize() {
+	if p.Index < 1 {
+		p.Index = 1
+	}
+
+	if p.Size < p.defaultMinSize {
+		p.Size = p.defaultMinSize
+	}
+
+	if p.Size > p.defaultMaxSize {
+		p.Size = p.defaultMaxSize
+	}
+}

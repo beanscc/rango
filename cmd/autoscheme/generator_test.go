@@ -51,5 +51,49 @@ func TestStructGenerator_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Log("\n", tt.String())
+		fs, _ := tt.Format()
+		t.Logf("formated: \n%s\n", fs)
+	}
+}
+
+func TestTableSchemeGenerator_String(t *testing.T) {
+	tests := []tableSchemeGenerator{
+		{PackageName: "scheme",
+			TableName:    "t_user",
+			TableComment: "test table",
+			Fields: []Field{
+				{
+					Name: "ID",
+					Type: "int64",
+					Tags: []string{
+						`json:"id"`,
+						`test_tag:"id"`,
+					},
+					Comment: `test comment`,
+				},
+				{
+					Name: "LongTestColumnFieldName",
+					Type: "string",
+					Tags: []string{
+						`json:"long_test_column_field_name"`,
+						`test_tag:"long_test_column_field_name"`,
+					},
+					Comment: `xxxxxxxx long field name`,
+				},
+				{
+					Name: "CreatedAt",
+					Type: "time.Time",
+					Tags: []string{
+						`json:"created_at"`,
+						`test_tag:"created_at"`,
+					},
+					Comment: `xxxxxxxx created time`,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Logf("scheme %s:\n%s\n", tt.TableName, tt.String())
 	}
 }

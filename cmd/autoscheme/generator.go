@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"go/format"
+	"log"
 	"strings"
-	"unicode/utf8"
 )
 
 type Field struct {
@@ -14,7 +15,7 @@ type Field struct {
 	Comment string   // 字段注释
 }
 
-func (f Field) Columns() []string {
+func (f Field) String() string {
 	cs := []string{
 		f.Name, // name
 		f.Type, // type
@@ -28,17 +29,7 @@ func (f Field) Columns() []string {
 		cs = append(cs, fmt.Sprintf("// %s", f.Comment)) // comment
 	}
 
-	return cs
-}
-
-// runeDisplayLenMap utf8字符等宽显示所需的字节长度
-var runeDisplayLenMap = map[int]int{
-	1: 1, // 如 英文字母
-	2: 1, // 如 埃塞俄比亚语
-	3: 2, // 如 中文、日文
-	4: 2, // 如 表情：😂
-	5: 2,
-	6: 2,
+	return strings.Join(cs, " ")
 }
 
 type StructGenerator struct {
@@ -47,9 +38,20 @@ type StructGenerator struct {
 	Fields  []Field // 结构体字段
 }
 
+func (g StructGenerator) Format() (string, error) {
+	src, err := format.Source([]byte(g.String()))
+	if err != nil {
+		// Should never happen, but can arise when developing this code.
+		// The user can compile the output to see the error.
+		// log.Printf("warning: internal error: invalid Go generated: %s", err)
+		// log.Printf("warning: compile the package to analyze the error")
+		return g.String(), err
+	}
+	return string(src), nil
+}
+
 func (g StructGenerator) String() string {
 	fields := g.formatFields()
-
 	return fmt.Sprintf(`// %s %s
 type %s struct {
 	%s
@@ -63,81 +65,11 @@ type %s struct {
 
 // formatFields 格式化对齐所有字段
 func (g StructGenerator) formatFields() []string {
-	fieldsColumns := make([][]string, 0, len(g.Fields))
+	fields := make([]string, 0, len(g.Fields))
 	for _, v := range g.Fields {
-		fieldsColumns = append(fieldsColumns, v.Columns())
+		fields = append(fields, v.String())
 	}
-
-	// 计算每列字符串显示所需的最大字节数  map[int]int, 然后按各列的最长单位对齐
-	columnsMaxDisplayLen := g.calColumnsMaxDisplayLen(fieldsColumns)
-	rows := make([]string, 0, len(fieldsColumns))
-	for _, fieldColumns := range fieldsColumns {
-		rowStr := g.formatField(fieldColumns, columnsMaxDisplayLen)
-		rows = append(rows, rowStr)
-	}
-
-	return rows
-}
-
-// formatField 按各列对齐所需的最大长度，格式化字段输出
-func (g StructGenerator) formatField(columns []string, columnsMaxDisplayLen map[int]int) string {
-	columnData := make([]string, 0, len(columns))
-	for index, column := range columns {
-		charLen := utf8.RuneCountInString(column)
-		displayLen := g.calStrDisplayLen(column)
-		// 若该字符串等宽显示所需的字节数小于该列等宽显示所需的最大字节数，
-		// 则给其 fmt 的时的字符长度 = 原字符长度 + （maxDisplayLen - displayLen）
-		if displayLen < columnsMaxDisplayLen[index] {
-			charLen += columnsMaxDisplayLen[index] - displayLen
-		}
-
-		if index == len(columns)-1 { // 最后一列，不用补齐
-			columnData = append(columnData, column)
-		} else {
-			columnData = append(columnData, fmt.Sprintf("%-*s", charLen, column))
-		}
-	}
-
-	return strings.Join(columnData, " ")
-}
-
-// calColumnsMaxDisplayLen 计算多行数据每列数据显示的最大字节长度
-func (g StructGenerator) calColumnsMaxDisplayLen(rows [][]string) map[int]int {
-	columnsMaxDisplayLen := make(map[int]int, 0)
-	for _, row := range rows {
-		for index, column := range row {
-			cdLen := g.calStrDisplayLen(column)
-			if _, ok := columnsMaxDisplayLen[index]; !ok {
-				columnsMaxDisplayLen[index] = cdLen
-			} else {
-				if columnsMaxDisplayLen[index] < cdLen {
-					columnsMaxDisplayLen[index] = cdLen
-				}
-			}
-		}
-	}
-
-	return columnsMaxDisplayLen
-}
-
-// calStrDisplayLen 计算字符串等宽显示需要的字节长度
-func (g StructGenerator) calStrDisplayLen(s string) int {
-	tmp, l := s, 0
-	for {
-		if len(tmp) == 0 {
-			break
-		}
-		_, i := utf8.DecodeRuneInString(tmp)
-		if charDisplayLen, ok := runeDisplayLenMap[i]; ok {
-			l += charDisplayLen
-		} else {
-			l += i
-		}
-
-		tmp = tmp[i:]
-	}
-
-	return l
+	return fields
 }
 
 // 常用大写缩写
@@ -199,14 +131,12 @@ func snake2Camel(s string) string {
 	return strings.Join(ss, "")
 }
 
-// =============== struct generator end ===============
-
 // tableSchemeGenerator 表结构生成器
 type tableSchemeGenerator struct {
-	PackageName  string // package name
-	TableName    string // table_name
-	TableComment string // 表注释
-	Fields       []Field
+	PackageName  string  // package name
+	TableName    string  // table_name
+	TableComment string  // 表注释
+	Fields       []Field // 结构体字段
 }
 
 func (g tableSchemeGenerator) getImports() []string {
@@ -237,35 +167,36 @@ func (g tableSchemeGenerator) getStructName() string {
 }
 
 func (g tableSchemeGenerator) String() string {
-	imports := g.getImports()
-	structName := g.getStructName()
-
-	sg := StructGenerator{
-		Name:    structName,
-		Comment: g.getTableComment(),
-		Fields:  g.Fields,
-	}
-
-	ts := fmt.Sprintf(`
-%s
-
-// TableName table name
-func (t %s) TableName() string {
-	return %q
-}`,
-		sg.String(),
-		structName,
-		g.TableName,
-	)
-
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("package %s\n", g.PackageName))
+
+	imports := g.getImports()
 	if len(imports) > 0 {
 		buf.WriteString("\nimport (\n\t")
 		buf.WriteString(strings.Join(imports, "\n\t"))
 		buf.WriteString("\n)\n")
 	}
-	buf.WriteString(ts)
 
-	return buf.String()
+	sg := StructGenerator{
+		Name:    g.getStructName(),
+		Comment: g.getTableComment(),
+		Fields:  g.Fields,
+	}
+
+	buf.WriteString(sg.String()) // struct
+	buf.WriteString(fmt.Sprintf(`
+// TableName table name
+func (t %s) TableName() string {
+	return %q
+}`, sg.Name, g.TableName,
+	))
+
+	src, err := format.Source(buf.Bytes())
+	if err != nil {
+		log.Printf("warning: internal error: invalid generated: %s", err)
+		log.Printf("warning: compile the package to analyze the error")
+		return buf.String()
+	}
+
+	return string(src)
 }
