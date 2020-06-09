@@ -2,10 +2,14 @@ package stringutil
 
 import (
 	"bytes"
+	"io/ioutil"
 	"regexp"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 // CharLength 返回字符个数
@@ -141,4 +145,42 @@ func Snake2Camel(s string, title bool) string {
 			return r
 		},
 		s)
+}
+
+// 后面将 crypto 库迁移过来后，一并迁移过去
+// // MD5 计算 md5 值
+// func MD5(b []byte) string {
+// 	h := md5.New()
+// 	h.Write(b)
+// 	return hex.EncodeToString(h.Sum(nil))
+// }
+//
+// // MD5Str 计算多个字符拼接后的字符串的 md5 值
+// func MD5Str(s ...string) string {
+// 	return MD5([]byte(strings.Join(s, "")))
+// }
+//
+// // UUID 生成 uuid
+// func UUID() string {
+// 	return uuid.NewV4().String()
+// }
+
+// GBK2UTF8 transform GBK bytes to UTF-8 bytes
+func GBK2UTF8(str []byte) (b []byte, err error) {
+	r := transform.NewReader(bytes.NewReader(str), simplifiedchinese.GBK.NewDecoder())
+	b, err = ioutil.ReadAll(r)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// UTF82GBK transform UTF-8 bytes to GBK bytes
+func UTF82GBK(str []byte) (b []byte, err error) {
+	r := transform.NewReader(bytes.NewReader(str), simplifiedchinese.GBK.NewEncoder())
+	b, err = ioutil.ReadAll(r)
+	if err != nil {
+		return
+	}
+	return
 }
