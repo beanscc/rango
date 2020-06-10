@@ -32,7 +32,7 @@ func Unique(slice interface{}) interface{} {
 	case []string:
 		return UniqueStrings(slice.([]string))
 	default:
-		return uniqueReflect(slice)
+		return UniqueReflect(slice, nil)
 	}
 }
 
