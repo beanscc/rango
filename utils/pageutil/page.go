@@ -77,12 +77,12 @@ func GetValidPage(pageIndex, pageSize, defaultSize int) (page int, size int) {
 // SlicePage 按分页大小分页，获取长度为 total 的切片 pageIndex 页的开始位置的结束位置；exist 表示分页位置是否存在
 func SlicePage(total, pageIndex, pageSize int) (start, end int, exist bool) {
 	if total < 1 {
-		return 0, 0, false
+		return -1, -1, false
 	}
 
 	start = GetOffset(pageIndex, pageSize)
 	if total <= start {
-		return 0, 0, false
+		return -1, -1, false
 	}
 
 	end = start + pageSize
