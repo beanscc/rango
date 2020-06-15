@@ -2,135 +2,58 @@ package log
 
 import (
 	"context"
-	"os"
-	"sync"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var once sync.Once
-var logger *zap.SugaredLogger
+// Logger log 接口
+// - 包含了一组不同级别的 log 方法
+// - With 方法可向 logger 对象中添加 key/val 健值对，将输出到日志中
+type Logger interface {
+	Debug(v ...interface{})
+	Debugf(format string, v ...interface{})
 
-// Init 初始化 logger 对象
-// 若未指定或指定 level 不存在，则 level = info
-// 若未设置 writers 则 输出到 标准输出
-// eg: log.Init("group-name", "project-name", "debug", os.Stdout, log.NewFileWriteSyncer("/tmp/group-project.log", 100))
-func Init(namespace, project, level string, writers ...zapcore.WriteSyncer) {
-	once.Do(func() {
-		logger = newLogger(namespace, project, level, writers...)
-	})
+	Info(v ...interface{})
+	Infof(format string, v ...interface{})
+
+	// 消息等级高于 Info，但不必担心，不是严重错误，
+	Warn(v ...interface{})
+	Warnf(format string, v ...interface{})
+
+	// 消息等级很高，一般程序正常运行的话，理应没有此类错误
+	Error(v ...interface{})
+	Errorf(format string, v ...interface{})
+
+	// logs a message, then panics
+	Panic(v ...interface{})
+	Panicf(format string, v ...interface{})
+
+	// logs a message, then call os.Exit(1)
+	Fatal(v ...interface{})
+	Fatalf(format string, v ...interface{})
+
+	// With 用于向 logger 对象中设置 key/val 对，该健值对将输出到日志
+	With(key string, val interface{}) Logger
 }
 
-func newLogger(namespace, project, level string, writers ...zapcore.WriteSyncer) *zap.SugaredLogger {
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "log",
-		CallerKey:      "file",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-		EncodeName:     zapcore.FullNameEncoder,
-	}
-
-	// 默认到 标准输出
-	if len(writers) == 0 {
-		writers = []zapcore.WriteSyncer{
-			os.Stdout,
-		}
-	}
-
-	atomicLevel := zap.NewAtomicLevel()
-	atomicLevel.SetLevel(zapLevel(level))
-	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.NewMultiWriteSyncer(writers...),
-		atomicLevel,
-	)
-	caller := zap.AddCaller()
-	development := zap.Development()
-	return zap.New(core, caller, development, zap.AddCallerSkip(0)).Sugar().With("namespace", namespace, "project", project)
+// NewContext 将 Logger 对象保存到 ctx 上下文中
+func NewContext(ctx context.Context, logger Logger) context.Context {
+	return context.WithValue(ctx, ContextKey(), logger)
 }
 
-var zapLevelMap = map[string]zapcore.Level{
-	"debug":  zapcore.DebugLevel,
-	"info":   zapcore.InfoLevel,
-	"warn":   zapcore.WarnLevel,
-	"error":  zapcore.ErrorLevel,
-	"dpanic": zapcore.DPanicLevel,
-	"panic":  zapcore.PanicLevel,
-	"fatal":  zapcore.FatalLevel,
-}
-
-// 未知 level 则返回 InfoLevel
-func zapLevel(level string) zapcore.Level {
-	if l, ok := zapLevelMap[level]; ok {
-		return l
-	}
-	return zap.InfoLevel
-}
-
-// Logger 获取全局logger 对象；需要先初始化
-func Logger() *zap.SugaredLogger {
-	if logger == nil {
-		panic("nil logger")
-	}
-
-	return logger
-}
-
-// // WithContext return a logger with context info
-// func WithContext(ctx context.Context) *zap.SugaredLogger {
-// 	return withCtxFn(ctx, Logger())
-// }
-//
-// type WithContextFunc func(ctx context.Context, l *zap.SugaredLogger) *zap.SugaredLogger
-//
-// var withCtxFn WithContextFunc
-//
-// func SetWithContextFunc(fn WithContextFunc) {
-// 	withCtxFn = fn
-// }
-
-const loggerCtxKey = "Ctx-Key-Logger"
-
-// ContextKey return
-func ContextKey() string {
-	return loggerCtxKey
-}
-
-// NewContext return new context with a *zap.SugaredLogger inside
-// 若将 log 保存在 gin.Context 中：
-//      // c = *gin.Context
-//      c.Set(log.ContextKey(), logger)
-func NewContext(ctx context.Context, log *zap.SugaredLogger) context.Context {
-	return context.WithValue(ctx, ContextKey(), log)
-}
-
-// FromContext return log from ctx
-func FromContext(ctx context.Context) *zap.SugaredLogger {
+// FromContext 从 ctx 上下文中获取 Logger，若不存在，则返回全局默认 std.Logger()
+func FromContext(ctx context.Context) Logger {
 	if ctx == nil {
-		panic("nil ctx")
+		panic("log: nil ctx")
 	}
 
 	val := ctx.Value(ContextKey())
-	if v, ok := val.(*zap.SugaredLogger); ok {
+	if v, ok := val.(Logger); ok {
 		return v
 	}
 
-	return Logger()
+	return Std()
 }
 
-// NewFileWriteSyncer 文件输出器
-func NewFileWriteSyncer(file string, size int) zapcore.WriteSyncer {
-	return zapcore.AddSync(&lumberjack.Logger{
-		Filename: file,
-		MaxSize:  size,
-	})
+// ContextKey 返回将 Logger 存入 context 上下文时，对应的 key
+func ContextKey() string {
+	return "github.com/beanscc/rango/log::context-key"
 }

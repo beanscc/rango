@@ -145,3 +145,15 @@ func Test_JoinInt64s(t *testing.T) {
 		})
 	}
 }
+
+// go test -v -count=1 -bench=BenchmarkJoinInt64s -benchtime=3s -benchmem -run BenchmarkJoinInt64s
+func BenchmarkJoinInt64s(b *testing.B) {
+	tests := make([]int64, 0)
+	for i := 0; i < 1000000; i++ {
+		tests = append(tests, int64(i))
+	}
+
+	for i := 0; i < b.N; i++ {
+		_ = JoinInt64s(tests, "@@@@@@@@@@@@@")
+	}
+}
