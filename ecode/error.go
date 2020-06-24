@@ -39,7 +39,7 @@ func FromError(err error) (*Error, bool) {
 	if ok {
 		return e, true
 	}
-	return nil, false
+	return NewError(CodeUnknown, err.Error()), false
 }
 
 // Error implement error interface{}

@@ -35,7 +35,7 @@ func TestFromError(t *testing.T) {
 			},
 			fromError: fromError{
 				isError: false,
-				err:     nil,
+				err:     NewError(CodeUnknown, errors.New("not ecode.Error").Error()),
 			},
 		},
 		{
