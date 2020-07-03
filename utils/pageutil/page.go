@@ -7,7 +7,7 @@ import (
 // Page page
 type Page struct {
 	Index int `json:"index" form:"page_index"` // 页码
-	Size  int `json:"size" from:"page_size"`   // 分页大小
+	Size  int `json:"size" form:"page_size"`   // 分页大小
 	Total int `json:"total"`                   // 符合条件的总记录数（仅用于响应结构中）
 }
 
