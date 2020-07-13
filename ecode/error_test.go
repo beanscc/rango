@@ -76,23 +76,20 @@ func TestFromError(t *testing.T) {
 	}
 }
 
-func TestError_String(t *testing.T) {
+func TestError(t *testing.T) {
 	tests := []struct {
 		err *Error
 		str string
 	}{
 		{nil, `<nil>`},
 		{NewError(400, "bad request"), `error code: 400, msg: bad request`},
-		{NewErrorWithDetail(500, "system error", errors.New("can't connect to redis")), `error code: 500, msg: system error`},
+		{NewErrorWithDetail(500, "system error", errors.New("can't connect to redis")), `error code: 500, msg: system error, detail: can't connect to redis`},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			t.Logf(`
-e.Error() :%v
-e.String():%v
-`, tt.err, tt.err.String())
-
+			// t.Logf(`e.Error():%v, code:%v, msg:%v, detail:%v`, tt.err, tt.err.Code(), tt.err.Msg(), tt.err.Detail())
+			t.Logf(`e.Error():%v`, tt.err)
 			if tt.err != nil {
 				if tt.err.Error() != tt.str {
 					t.Errorf("ecode.Error string failed. got:%s; want:%s", tt.err, tt.str)
