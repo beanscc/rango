@@ -2,7 +2,6 @@ package gormutil_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -39,13 +38,10 @@ func TestSlaveWithGormDefaultLogger(t *testing.T) {
 }
 
 func TestSlaveWithZapLogger(t *testing.T) {
-	// 使用 zap 自定义的 logger
-	log.Init("group", "test", "debug", os.Stdout)
-	ctx := log.NewContext(context.Background(), log.Logger().With("x-request-id", "xxxx-xxx-xxx"))
-
 	conn := testGetConn()
 	conn.SetContextFunc(gormutil.DefaultContextFunc())
-
+	// 使用 zap 自定义的 logger
+	ctx := log.NewContext(context.Background(), log.Std().With("x-request-id", "xxxx-xxx-xxx"))
 	var res testRes
 	err := conn.Slave().
 		WithContext(ctx).
@@ -58,7 +54,7 @@ func TestSlaveWithZapLogger(t *testing.T) {
 	}
 
 	// 查询SQL日志输出：
-	// {"level":"info","time":"2020-06-10T01:33:18.043+0800","file":"gormutil/logger.go:166","msg":"[gorm-time]:2020-06-10T01:33:18.043104+08:00; [gorm-file]:/Users/yan/work/github.com/beanscc/rango/database/gormutil/conn_test.go:46; [gorm-latency]:4.77ms; [gorm-sql]:select database() as \"name\"; [gorm-rows]:1 rows affected or returned","namespace":"group","project":"test","x-request-id":"xxxx-xxx-xxx"}
+	// {"level":"info","time":"2020-06-10T01:33:18.043+0800","file":"gormutil/logger.go:166","msg":"[gorm-time]:2020-06-10T01:33:18.043104+08:00; [gorm-file]:/Users/yan/work/github.com/beanscc/rango/database/gormutil/conn_test.go:46; [gorm-latency]:4.77ms; [gorm-sql]:select database() as \"name\"; [gorm-rows]:1 rows affected or returned","x-request-id":"xxxx-xxx-xxx"}
 
 	t.Logf("[TestSlaveWithZapLogger] db name:%v", res.Name)
 }

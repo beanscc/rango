@@ -7,7 +7,7 @@ import (
 	"github.com/beanscc/rango/database/gormutil"
 )
 
-var globalDBConn *gormutil.Conn
+var globalDBConn *gormutil.DB
 var globalDBName string
 
 func initDB(dsn string) error {
@@ -23,7 +23,7 @@ func initDB(dsn string) error {
 		Unscoped: true,
 	}
 
-	db, err := gormutil.NewConn(&m, &m)
+	db, err := gormutil.NewDB(&m)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func initDB(dsn string) error {
 	return err
 }
 
-func conn() *gormutil.Conn {
+func conn() *gormutil.DB {
 	return globalDBConn
 }
 
