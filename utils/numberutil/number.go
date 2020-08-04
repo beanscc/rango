@@ -3,6 +3,7 @@ package numberutil
 import (
 	"fmt"
 	"math"
+	"strconv"
 )
 
 // Uint8FromInt int 转 uint8
@@ -76,7 +77,7 @@ func equalFloatPrec(x, y interface{}, decimals int) bool {
 // NumberStr 数字千分位表示。数字转换成字符串，每 3 位使用 sep 分隔
 // NumberStr(10000, ',') 输出： 10,000
 func NumberStr(n int64, sep rune) string {
-	ns := fmt.Sprint(n)
+	ns := strconv.FormatInt(n, 10)
 	for i := len(ns) - 3; i > 0; i -= 3 {
 		ns = ns[:i] + string(sep) + ns[i:]
 	}

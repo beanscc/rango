@@ -66,20 +66,24 @@ func TestRound(t *testing.T) {
 	testData := []struct {
 		name  string
 		input float64
+		prec  int
 		want  float64
 	}{
-		{"t1", 1.0, 1},
-		{"t2", 1.00, 1},
-		{"t3", 1.1, 1.1},
-		{"t4", 1.0011, 1.001},
-		{"t5", 1.0015, 1.002},
+		{"t1", 1.0, 3, 1},
+		{"t2", 1.00, 3, 1},
+		{"t3", 1.1, 1, 1.1},
+		{"t4", 1.0011, 3, 1.001},
+		{"t5", 1.0015, 3, 1.002},
+		{"t6", 1.0284999, 3, 1.028},
+		{"t7", 1.285, 2, 1.29}, // 得到的是 1.28 ?
 	}
 
 	for _, d := range testData {
 		t.Run(d.name, func(t *testing.T) {
-			r := Round(d.input, 3)
+			r := Round(d.input, d.prec)
 			if r != d.want {
 				t.Errorf("t: %v, Round to %v failed. input=%v, want=%v, ret=%v", d.name, 3, d.input, d.want, r)
+				return
 			}
 
 			t.Logf("t: %v, Round to %v success. ret: %v, want: %v, ret=%v", d.name, 3, r, d.want, r)
