@@ -17,7 +17,7 @@ import (
 var (
 	version      = flag.Bool("v", false, "version prints the build information")
 	help         = flag.Bool("h", false, "help prints the usage")
-	connDSN      = flag.String("dsn", "", `mysql connect dsn; eg: "user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local"`)
+	connDSN      = flag.String("dsn", "", `mysql connect dsn; eg: "-dsn 'user:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&parseTime=True&loc=Local'"`)
 	outputPath   = flag.String("output", "scheme", "output path, the last base path is the package name; eg: ${project path}/repo/scheme")
 	wantTables   = flag.String("tables", "", "tables that you want to generate, separate multiple table names with commas; eg: table1,table2")
 	prefixTables = flag.String("prefix", "", "若指定该选项，则只处理表名中含有此前缀的表结构")

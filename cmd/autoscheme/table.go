@@ -57,7 +57,7 @@ func getNames(ns []Name) []string {
 
 func getDatabaseName() (string, error) {
 	var names []Name
-	err := conn().Slave().
+	err := conn().
 		Raw(`select database() as name`).
 		Scan(&names).Error
 	return names[0].Name, err
@@ -65,7 +65,7 @@ func getDatabaseName() (string, error) {
 
 func getTables() ([]string, error) {
 	var tables []Name
-	err := conn().Slave().
+	err := conn().
 		Raw(`select table_name as name from information_schema.tables where table_schema=?`, dbName()).
 		Scan(&tables).Error
 	return getNames(tables), err
@@ -85,7 +85,7 @@ type Column struct {
 // 获取表的所有列字段信息
 func getTableFullColumns(table string) ([]Column, error) {
 	var out []Column
-	err := conn().Slave().Raw(`show full columns from ` + table).Scan(&out).Error
+	err := conn().Raw(`show full columns from ` + table).Scan(&out).Error
 	return out, err
 }
 
@@ -95,6 +95,6 @@ type Table struct {
 
 func getTableInfo(table string) (*Table, error) {
 	var out Table
-	err := conn().Slave().Raw(`select table_comment from information_schema.tables where table_schema = ? and table_name = ?`, dbName(), table).Scan(&out).Error
+	err := conn().Raw(`select table_comment from information_schema.tables where table_schema = ? and table_name = ?`, dbName(), table).Scan(&out).Error
 	return &out, err
 }

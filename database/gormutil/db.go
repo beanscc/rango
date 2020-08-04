@@ -38,7 +38,9 @@ func NewDB(c *Config) (*DB, error) {
 // WithContext return a new *gorm.DB with context
 func (d *DB) WithContext(ctx context.Context) *gorm.DB {
 	n := d.DB.New()
-	d.contextFunc(ctx, n)
+	if d.contextFunc != nil {
+		d.contextFunc(ctx, n)
+	}
 	return n
 }
 
