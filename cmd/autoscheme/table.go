@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func buildTableStruct(packageName string, table string) (string, error) {
 	tableInfo, err := getTableInfo(table)
@@ -15,6 +18,9 @@ func buildTableStruct(packageName string, table string) (string, error) {
 	fields := make([]Field, 0, len(columns))
 	for _, v := range columns {
 		dataType := getDataType(v.Type)
+		if strings.ToUpper(v.Null) == "YES" {
+			dataType = "*" + dataType
+		}
 
 		// 将 默认值放入 comment
 		comment := v.Comment
@@ -26,7 +32,7 @@ func buildTableStruct(packageName string, table string) (string, error) {
 			Name: snake2Camel(v.Field),
 			Type: dataType,
 			Tags: []string{
-				fmt.Sprintf(`gorm:"column:%s"`, v.Field),
+				v.GormTag(),
 				fmt.Sprintf(`json:"%s"`, v.Field),
 			},
 			Comment: comment,
@@ -82,10 +88,33 @@ type Column struct {
 	Comment   string `gorm:"column:Comment"`   // 注释
 }
 
+func (c *Column) GormTag() string {
+	tags := []string{
+		"column:" + c.Field,
+	}
+
+	if c.Key == "PRI" {
+		tags = append(tags, "primaryKey")
+	}
+
+	if strings.Contains(c.Extra, "auto_increment") {
+		tags = append(tags, "autoIncrement")
+	}
+
+	if c.Null == "NO" {
+		tags = append(tags, "NOT NULL")
+		if c.Default != "" {
+			tags = append(tags, "default:"+c.Default)
+		}
+	}
+
+	return fmt.Sprintf(`gorm:"%s"`, strings.Join(tags, ";"))
+}
+
 // 获取表的所有列字段信息
 func getTableFullColumns(table string) ([]Column, error) {
 	var out []Column
-	err := conn().Raw(`show full columns from ` + table).Scan(&out).Error
+	err := conn().Raw(fmt.Sprintf("show full columns from `%s`", table)).Scan(&out).Error
 	return out, err
 }
 
