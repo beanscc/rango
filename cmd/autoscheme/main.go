@@ -101,7 +101,7 @@ func main() {
 	for _, v := range tables {
 		b, err := buildTableStruct(pkgName, v)
 		if err != nil {
-			log.Fatalf("gen table scheme failed. err: %v", err)
+			log.Fatalf("gen table scheme failed. table:%s, err: %v", v, err)
 		}
 
 		// write to file
