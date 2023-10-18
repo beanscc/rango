@@ -22,6 +22,7 @@ var (
 )
 
 func main() {
+	log.Default().SetFlags(log.Llongfile)
 	flag.Parse()
 
 	var tags []string
