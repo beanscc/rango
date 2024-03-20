@@ -1,7 +1,6 @@
 package sliceutil
 
 import (
-	"math"
 	"reflect"
 )
 
@@ -36,5 +35,19 @@ func chunkCap(l, size int) int {
 	if size <= 0 {
 		panic("size must > 0")
 	}
-	return int(math.Ceil(float64(l) / float64(size)))
+
+	if l < size {
+		// 6, 7
+		return 1
+	}
+
+	d := l / size
+	m := l % size
+	if m == 0 {
+		// 7,7
+		return d
+	}
+
+	// 8, 7
+	return d + 1
 }

@@ -33,3 +33,17 @@ func Atoi(xs []string) ([]int, error) {
 
 	return xi, nil
 }
+
+// ToAny 将其他类型的 slice 转成 []any
+// 示例:
+//
+//	ss := []string{"a", "b"}
+//	ToAny(ss...)  // []any{"a", "b"}
+//	ToAny(ss)  // []any{[]string{"a", "b"}}
+func ToAny[T any](a ...T) []any {
+	out := make([]any, len(a))
+	for i, v := range a {
+		out[i] = v
+	}
+	return out
+}

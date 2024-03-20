@@ -1,6 +1,8 @@
 package timeutil
 
-import "time"
+import (
+	"time"
+)
 
 // time layout format
 // 这里只定义 layout 格式，请按需选择即可，格式化输出请使用： t.Format(layout)
@@ -80,3 +82,13 @@ func Range(start, end time.Time, step time.Duration) []time.Time {
 
 	return out
 }
+
+// // DurationFormat 将 duration 按 https://en.wikipedia.org/wiki/ISO_8601#Durations 时间段表示法表示
+// func DurationFormat(d time.Duration, layout string) string {
+// 	days := int(d.Hours() / 24)
+// 	hours := int(d.Hours()) % 24
+// 	minutes := int(d.Minutes()) % 60
+// 	seconds := int(d.Seconds()) % 60
+// 	// TODO
+// 	return fmt.Sprintf("%d天%d小时%d分钟%d秒", days, hours, minutes, seconds)
+// }
