@@ -36,6 +36,12 @@ func UnixNano(t time.Time) int64 {
 	return t.UnixNano()
 }
 
+// Date 获取 t 的 date 时间
+func Date(t time.Time, loc *time.Location) time.Time {
+	y, m, d := t.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, loc)
+}
+
 // DayRange 根据传入时间，获取当天的起始时间点
 func DayRange(t time.Time, loc *time.Location) (time.Time, time.Time) {
 	y, m, d := t.Date()

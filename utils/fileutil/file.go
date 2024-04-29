@@ -3,6 +3,7 @@ package fileutil
 import (
 	"fmt"
 	"math"
+	"os"
 )
 
 // FormatFileSize 以易于阅读的格式输出文件大小，如 1KB 234MB
@@ -19,4 +20,19 @@ func FormatFileSize(byteSize int64) string {
 
 	filesize := float64(byteSize) / math.Pow(1024, exp)
 	return fmt.Sprintf("%.2f%s", filesize, units[int(exp)])
+}
+
+// FileExist 依次返回 filename 是否存在，以及是否目录
+func FileExist(filename string) (exist bool, isDir bool, err error) {
+	f, err := os.Stat(filename)
+	if err == nil {
+		return true, f.IsDir(), nil
+	}
+
+	if os.IsNotExist(err) {
+		return false, false, nil
+	}
+
+	// 其他错误
+	return false, false, err
 }

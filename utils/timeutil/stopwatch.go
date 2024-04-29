@@ -19,6 +19,5 @@ func NewStopwatch() *Stopwatch {
 func (sw *Stopwatch) ElapsedTime() time.Duration {
 	sw.end = time.Now()
 	latency := sw.end.Sub(sw.start)
-
 	return latency
 }

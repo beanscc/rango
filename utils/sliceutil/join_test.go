@@ -90,9 +90,9 @@ func Test_JoinInts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := JoinInts(tt.args.ints, tt.args.sep)
+			got := Join(tt.args.ints, tt.args.sep)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("JoinInts() failed. got=%v, want=%v", got, tt.want)
+				t.Errorf("Join() []int failed. got=%v, want=%v", got, tt.want)
 			}
 		})
 	}
@@ -114,9 +114,9 @@ func Test_JoinInt32s(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := JoinInt32s(tt.args.ints, tt.args.sep)
+			got := Join(tt.args.ints, tt.args.sep)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("JoinInt32s() failed. got=%v, want=%v", got, tt.want)
+				t.Errorf("Join() []int32 failed. got=%v, want=%v", got, tt.want)
 			}
 		})
 	}
@@ -138,9 +138,9 @@ func Test_JoinInt64s(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := JoinInt64s(tt.args.ints, tt.args.sep)
+			got := Join(tt.args.ints, tt.args.sep)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("JoinInt64s() failed. got=%v, want=%v", got, tt.want)
+				t.Errorf("Join() []int64 failed. got=%v, want=%v", got, tt.want)
 			}
 		})
 	}
@@ -154,6 +154,6 @@ func BenchmarkJoinInt64s(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		_ = JoinInt64s(tests, "@@@@@@@@@@@@@")
+		_ = Join(tests, "@@@@@@@@@@@@@")
 	}
 }
