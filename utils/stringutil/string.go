@@ -5,14 +5,14 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
@@ -166,13 +166,13 @@ func MD5Str(s ...string) string {
 
 // UUID 生成 uuid
 func UUID() string {
-	return uuid.NewV4().String()
+	return uuid.New().String()
 }
 
 // GBK2UTF8 transform GBK bytes to UTF-8 bytes
 func GBK2UTF8(str []byte) (b []byte, err error) {
 	r := transform.NewReader(bytes.NewReader(str), simplifiedchinese.GBK.NewDecoder())
-	b, err = ioutil.ReadAll(r)
+	b, err = io.ReadAll(r)
 	if err != nil {
 		return
 	}
@@ -182,7 +182,7 @@ func GBK2UTF8(str []byte) (b []byte, err error) {
 // UTF82GBK transform UTF-8 bytes to GBK bytes
 func UTF82GBK(str []byte) (b []byte, err error) {
 	r := transform.NewReader(bytes.NewReader(str), simplifiedchinese.GBK.NewEncoder())
-	b, err = ioutil.ReadAll(r)
+	b, err = io.ReadAll(r)
 	if err != nil {
 		return
 	}
@@ -192,39 +192,39 @@ func UTF82GBK(str []byte) (b []byte, err error) {
 // ToString convert v to string
 func ToString(v interface{}) string {
 	var s string
-	switch v.(type) {
+	switch v := v.(type) {
 	case string:
-		s = v.(string)
+		s = v
 	case []byte:
-		s = string(v.([]byte))
+		s = string(v)
 	case []rune:
-		s = string(v.([]rune))
+		s = string(v)
 	case int:
-		s = strconv.Itoa(v.(int))
+		s = strconv.Itoa(v)
 	case int8:
-		s = strconv.Itoa(int(v.(int8)))
+		s = strconv.Itoa(int(v))
 	case int16:
-		s = strconv.Itoa(int(v.(int16)))
+		s = strconv.Itoa(int(v))
 	case int32: // as rune
-		s = strconv.FormatInt(int64(v.(int32)), 10)
+		s = strconv.FormatInt(int64(v), 10)
 	case int64:
-		s = strconv.FormatInt(v.(int64), 10)
+		s = strconv.FormatInt(v, 10)
 	case uint:
-		s = strconv.FormatUint(uint64(v.(uint)), 10)
+		s = strconv.FormatUint(uint64(v), 10)
 	case uint8: // as byte
-		s = strconv.FormatUint(uint64(v.(uint8)), 10)
+		s = strconv.FormatUint(uint64(v), 10)
 	case uint16:
-		s = strconv.FormatUint(uint64(v.(uint16)), 10)
+		s = strconv.FormatUint(uint64(v), 10)
 	case uint32:
-		s = strconv.FormatUint(uint64(v.(uint32)), 10)
+		s = strconv.FormatUint(uint64(v), 10)
 	case uint64:
-		s = strconv.FormatUint(v.(uint64), 10)
+		s = strconv.FormatUint(v, 10)
 	case float32:
-		s = strconv.FormatFloat(float64(v.(float32)), 'f', -1, 64)
+		s = strconv.FormatFloat(float64(v), 'f', -1, 64)
 	case float64:
-		s = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+		s = strconv.FormatFloat(v, 'f', -1, 64)
 	case bool:
-		s = strconv.FormatBool(v.(bool))
+		s = strconv.FormatBool(v)
 	default:
 		s = fmt.Sprint(v)
 	}
