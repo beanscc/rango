@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func TestFileExist(t *testing.T) {
+func TestIsExist(t *testing.T) {
 	// 测试不存在问题
 	filename := filepath.Join("/tmp", fmt.Sprintf("test_not_exist_%d", time.Now().UnixNano()))
 	t.Logf("filename: %s", filename)
-	exist, isDir, err := FileExist(filename)
+	exist, isDir, err := IsExist(filename)
 	if exist || isDir || err != nil {
 		t.Errorf("file:%s should not exist err: %v", filename, err)
 	}
@@ -31,7 +31,7 @@ func TestFileExist(t *testing.T) {
 	fd.WriteString("test")
 	fd.Sync()
 
-	exist, isDir, err = FileExist(filename)
+	exist, isDir, err = IsExist(filename)
 	if !exist || isDir || err != nil {
 		t.Errorf("file:%s should exist err: %v", filename, err)
 	}
@@ -40,7 +40,7 @@ func TestFileExist(t *testing.T) {
 	testDir := filepath.Join("/tmp", "test_dir")
 	defer os.Remove(testDir)
 	// not exits dir
-	exist, isDir, err = FileExist(testDir)
+	exist, isDir, err = IsExist(testDir)
 	if exist || isDir || err != nil {
 		t.Errorf("dir: %s should not exist err: %v", testDir, err)
 	}
@@ -51,7 +51,7 @@ func TestFileExist(t *testing.T) {
 	}
 
 	// exist dir
-	exist, isDir, err = FileExist(testDir)
+	exist, isDir, err = IsExist(testDir)
 	if !exist || !isDir || err != nil {
 		t.Errorf("dir: %s should exist err: %v", testDir, err)
 	}

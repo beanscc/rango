@@ -22,8 +22,8 @@ func FormatFileSize(byteSize int64) string {
 	return fmt.Sprintf("%.2f%s", filesize, units[int(exp)])
 }
 
-// FileExist 依次返回 filename 是否存在，以及是否目录
-func FileExist(filename string) (exist bool, isDir bool, err error) {
+// IsExist 判断 filename 是否路径/文件是否存在，以及 filename 是否文件夹
+func IsExist(filename string) (exist bool, isDir bool, err error) {
 	f, err := os.Stat(filename)
 	if err == nil {
 		return true, f.IsDir(), nil
