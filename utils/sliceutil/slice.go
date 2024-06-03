@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/beanscc/rango/utils/stringutil"
+	"github.com/beanscc/rango/utils/cast"
 )
 
 // Filter 过滤切片，仅返回 filter(i) == true 时的元素，返回一个新切片
@@ -22,6 +22,7 @@ func Filter[S ~[]E, E any](s S, filter func(i int) bool) S {
 }
 
 // Unique 切换元素去重
+// 去重后不保证原
 func Unique[S ~[]E, E comparable](s S) S {
 	l := len(s)
 	if l < 2 {
@@ -55,7 +56,7 @@ func Chunk[S ~[]E, E any](s S, length int) []S {
 
 func Join[S ~[]E, E any](s S, sep string) string {
 	return JoinFunc(len(s), sep, func(i int) string {
-		return stringutil.ToString(s[i])
+		return cast.ToString(s[i])
 	})
 }
 
