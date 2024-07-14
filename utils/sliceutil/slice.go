@@ -3,18 +3,18 @@ package sliceutil
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/beanscc/rango/utils/cast"
 )
 
 // Filter 过滤切片，仅返回 filter(i) == true 时的元素，返回一个新切片
-func Filter[S ~[]E, E any](s S, filter func(i int) bool) S {
-	l := len(s)
+func Filter[S ~[]E, E any](s S, filter func(i int, e E) bool) S {
 	out := make(S, 0)
-	for i := 0; i < l; i++ {
-		if filter(i) {
-			out = append(out, s[i])
+	for i, e := range s {
+		if filter(i, e) {
+			out = append(out, e)
 		}
 	}
 
@@ -134,7 +134,7 @@ func Convert[S1 ~[]From, S2 ~[]To, From any, To any](s1 S1, fn func(From) (To, e
 	return out, errors.Join(es...)
 }
 
-// Map 遍历 s，对其中每个元素，应用 mapping 方法
+// Map 返回一个新的 S， 其中每个元素，都应用 mapping 方法对元素进行了修改
 func Map[S ~[]E, E any](mapping func(E) E, s S) S {
 	out := make(S, len(s))
 	for i := range s {
@@ -143,11 +143,17 @@ func Map[S ~[]E, E any](mapping func(E) E, s S) S {
 	return out
 }
 
-// Walk 遍历 s1, 对其中每个元素，应用 callback 方法，返回 S2
-func Walk[S1 ~[]E1, S2 ~[]E2, E1, E2 any](s1 S1, walkFn func(i int, e E1) E2) S2 {
-	out := make(S2, len(s1))
-	for i, v := range s1 {
-		out[i] = walkFn(i, v)
+// Walk 遍历 s, 对其中每个元素，应用 fn 方法
+func Walk[S ~[]E, E any](s S, fn func(i int, e E)) {
+	for i, e := range s {
+		fn(i, e)
 	}
-	return out
+}
+
+// Shuffle 将切片顺序打乱
+func Shuffle[S ~[]E, E any](s S) {
+	for i := len(s) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		s[i], s[j] = s[j], s[i]
+	}
 }

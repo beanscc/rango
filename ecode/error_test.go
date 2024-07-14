@@ -35,28 +35,27 @@ func TestFromError(t *testing.T) {
 			},
 			fromError: fromError{
 				isError: false,
-				err:     NewError(CodeUnknown, errors.New("not ecode.Error").Error()),
+				err:     New(CodeUnknown, errors.New("not ecode.Error").Error()),
 			},
 		},
 		{
 			name: "test ecode.Error",
 			err: func() error {
-				return NewError(400, "invalid params")
+				return New(400, "invalid params")
 			},
 			fromError: fromError{
 				isError: true,
-				err:     NewError(400, "invalid params"),
+				err:     New(400, "invalid params"),
 			},
 		},
 		{
 			name: "test ecode.Error with detailed err 2",
 			err: func() error {
-				return NewErrorWithDetail(400, "invalid params", errors.New("detail err"))
+				return New(400, "invalid params").WithDetails(errors.New("detail err"))
 			},
 			fromError: fromError{
 				isError: true,
-				err:     NewErrorWithDetail(400, "invalid params", errors.New("detail err")),
-				// err: NewError(400, "invalid params"),
+				err:     New(400, "invalid params").WithDetails(errors.New("detail err")),
 			},
 		},
 	}
@@ -82,13 +81,12 @@ func TestError(t *testing.T) {
 		str string
 	}{
 		{nil, `<nil>`},
-		{NewError(400, "bad request"), `error code: 400, msg: bad request`},
-		{NewErrorWithDetail(500, "system error", errors.New("can't connect to redis")), `error code: 500, msg: system error, detail: can't connect to redis`},
+		{New(400, "bad request"), `error code: 400, message: bad request`},
+		{New(500, "system error").WithDetails(errors.New("can't connect to redis")), `error code: 500, message: system error, details: can't connect to redis`},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
-			// t.Logf(`e.Error():%v, code:%v, msg:%v, detail:%v`, tt.err, tt.err.Code(), tt.err.Msg(), tt.err.Detail())
 			t.Logf(`e.Error():%v`, tt.err)
 			if tt.err != nil {
 				if tt.err.Error() != tt.str {

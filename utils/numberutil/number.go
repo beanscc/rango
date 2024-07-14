@@ -92,3 +92,10 @@ func Round(x float64, n int) float64 {
 	pow10 := math.Pow10(n)
 	return math.Trunc((x+0.5/pow10)*pow10) / pow10
 }
+
+func Abs[T Float | Integer](a T) T {
+	if a < 0 {
+		return -a
+	}
+	return a
+}

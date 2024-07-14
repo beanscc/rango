@@ -9,7 +9,7 @@ import (
 func BenchmarkFilterInts(b *testing.B) {
 	type args struct {
 		xi []int
-		fn func(i int) bool
+		fn func(i int, e int) bool
 	}
 
 	xi1 := []int{1, 2, 3, 4, 5, 6, 7}
@@ -19,13 +19,15 @@ func BenchmarkFilterInts(b *testing.B) {
 		args args
 		want []int
 	}{
-		{"t1", args{xi: xi1, fn: func(i int) bool {
+		{"t1", args{xi: xi1, fn: func(i int, e int) bool {
 			// 只保留偶数
-			return xi1[i]%2 == 0
+			// return xi1[i]%2 == 0
+			return e%2 == 0
 		}}, []int{2, 4, 6}},
-		{"t2", args{xi: xi1, fn: func(i int) bool {
+		{"t2", args{xi: xi1, fn: func(i int, e int) bool {
 			// 只保留奇数
-			return xi1[i]%2 == 1
+			// return xi1[i]%2 == 1
+			return e%2 == 1
 		}}, []int{1, 3, 5, 7}},
 	}
 
@@ -44,7 +46,7 @@ func BenchmarkFilterInts(b *testing.B) {
 func Test_FilterInts(t *testing.T) {
 	type args struct {
 		xi []int
-		fn func(i int) bool
+		fn func(i int, e int) bool
 	}
 
 	xi1 := []int{1, 2, 3, 4, 5, 6, 7}
@@ -54,11 +56,11 @@ func Test_FilterInts(t *testing.T) {
 		args args
 		want []int
 	}{
-		{"t1", args{xi: xi1, fn: func(i int) bool {
+		{"t1", args{xi: xi1, fn: func(i int, e int) bool {
 			// 只保留偶数
 			return xi1[i]%2 == 0
 		}}, []int{2, 4, 6}},
-		{"t2", args{xi: xi1, fn: func(i int) bool {
+		{"t2", args{xi: xi1, fn: func(i int, e int) bool {
 			// 只保留奇数
 			return xi1[i]%2 == 1
 		}}, []int{1, 3, 5, 7}},
@@ -77,7 +79,7 @@ func Test_FilterInts(t *testing.T) {
 func Test_FilterStrings(t *testing.T) {
 	type args struct {
 		xs []string
-		fn func(i int) bool
+		fn func(i int, e string) bool
 	}
 
 	xs := [][]string{
@@ -90,13 +92,15 @@ func Test_FilterStrings(t *testing.T) {
 		args args
 		want []string
 	}{
-		{"t1", args{xs: xs[0], fn: func(i int) bool {
+		{"t1", args{xs: xs[0], fn: func(i int, e string) bool {
 			// 只保留含 "go" 字符串的项
-			return strings.Contains(xs[0][i], "go")
+			// return strings.Contains(xs[0][i], "go")
+			return strings.Contains(e, "go")
 		}}, []string{}},
-		{"t2", args{xs: xs[1], fn: func(i int) bool {
+		{"t2", args{xs: xs[1], fn: func(i int, e string) bool {
 			// 只保留含 "go" 字符串的项
-			return strings.Contains(xs[1][i], "go")
+			// return strings.Contains(xs[1][i], "go")
+			return strings.Contains(e, "go")
 		}}, []string{"哈哈go哈", "go to school", "郝大的 go 讲义"}},
 	}
 
